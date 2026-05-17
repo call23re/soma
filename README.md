@@ -1,5 +1,5 @@
 ## Soma
-Soma is an experimental, compositional input library made to be used with an ECS. It is currently just a prototype, and it's missing a number of important features.
+Soma is an experimental compositional input library made to be used with an ECS. It is currently just a prototype, and it's missing a number of important features.
 
 ## Usage
 
