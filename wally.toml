@@ -1,0 +1,8 @@
+[package]
+name = "call23re/soma"
+description = ""
+version = "0.1.0"
+license = "MIT"
+registry = "https://github.com/UpliftGames/wally-index"
+repository = "https://github.com/call23re/soma"
+realm = "shared"
