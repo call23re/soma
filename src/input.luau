@@ -58,8 +58,10 @@ local function input(option: InputKind, ...: map.InputCode): Input
 
 	self.set = function(_, ...: map.InputCode)
 		local prev_input_codes = table.clone(self.InputCodes)
+
 		self.InputCodes = {}
 		private.input_code_map = {}
+
 		for _, input_code in { ... } do
 			input_code = map.normalize(input_code)
 			if not private.input_code_map[input_code] then
@@ -67,17 +69,21 @@ local function input(option: InputKind, ...: map.InputCode): Input
 				private.input_code_map[input_code] = true
 			end
 		end
+
 		for _, cb in private.subscriptions do
 			cb(self.InputCodes, prev_input_codes)
 		end
+
 		return self
 	end
 
 	self.add = function(_, ...: map.InputCode)
 		local prev = table.clone(self.InputCodes)
 		local changed = false
+
 		local new_input_code_map = {}
 		local new_input_code_list = { ... }
+
 		for _, input_code in { ... } do
 			input_code = map.normalize(input_code)
 			if new_input_code_map[input_code] then
@@ -87,6 +93,7 @@ local function input(option: InputKind, ...: map.InputCode): Input
 			table.insert(new_input_code_list, input_code)
 			changed = true
 		end
+
 		if changed then
 			self.InputCodes = new_input_code_list
 			private.input_code_map = new_input_code_map
@@ -94,12 +101,14 @@ local function input(option: InputKind, ...: map.InputCode): Input
 				cb(self.InputCodes, prev)
 			end
 		end
+
 		return self
 	end
 
 	self.remove = function(_, ...: map.InputCode)
 		local prev = table.clone(self.InputCodes)
 		local changed = false
+
 		for _, input_code in { ... } do
 			input_code = map.normalize(input_code)
 			if private.input_code_map[input_code] then
@@ -108,11 +117,13 @@ local function input(option: InputKind, ...: map.InputCode): Input
 				changed = true
 			end
 		end
+
 		if changed then
 			for _, cb in private.subscriptions do
 				cb(self.InputCodes, prev)
 			end
 		end
+
 		return self
 	end
 
@@ -143,6 +154,7 @@ local function input(option: InputKind, ...: map.InputCode): Input
 
 		private.activated = if self.Operator == "ANY" then any_match else all_match
 		private.read = matches
+
 		return matches, any_match, if not any_match then false else all_match
 	end
 

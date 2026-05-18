@@ -50,19 +50,24 @@ local function binding(...: Binding | input.Input): Binding
 		map: { [Enum.KeyCode]: types.InputEvent }
 	): ({ [Enum.KeyCode]: boolean }, boolean, boolean)
 		local matches, any_match, all_match = {}, false, true
+
 		for _, next_input in self.Inputs do
 			local matches_res, any_match_res, all_match_res = next_input:matches(map)
+
 			if (any_match_res and next_input.Operator == "ANY") or (all_match_res and next_input.Operator == "ALL") then
 				any_match = true
 			else
 				all_match = false
 			end
+
 			for match in matches_res do
 				matches[match] = true
 			end
 		end
+
 		private.activated = if self.Operator == "ANY" then any_match else all_match
 		private.read = matches
+
 		return matches, any_match, if not any_match then false else all_match
 	end
 
