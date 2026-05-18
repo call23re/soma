@@ -127,12 +127,12 @@ local function input(option: InputKind, ...: map.InputCode): Input
 		return self
 	end
 
-	self.matches = function(_, match_map: { [Enum.KeyCode]: types.InputEvent })
+	self.matches = function(_, key_map: { [Enum.KeyCode]: types.InputEvent })
 		local matches, any_match, all_match = {}, false, true
 
 		for _, input_code in self.InputCodes do
 			local key_code = map.as_key_code(self.Kind, input_code)
-			local input_event = match_map[key_code]
+			local input_event = key_map[key_code]
 			if input_event then
 				if
 					(input_event.Event == "BEGAN" and self.Activator == "PRESSED")
@@ -166,11 +166,11 @@ local function input(option: InputKind, ...: map.InputCode): Input
 		return private.read
 	end
 
-	self.subscribe = function(_, cb: SubscriptionCallback)
+	self.subscribe = function(_, cb)
 		private.subscriptions[cb] = cb
 	end
 
-	self.unsubscribe = function(_, cb: SubscriptionCallback)
+	self.unsubscribe = function(_, cb)
 		if private.subscriptions[cb] then
 			private.subscriptions[cb] = nil
 		end

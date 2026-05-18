@@ -40,19 +40,16 @@ local function binding(...: Binding | input.Input): Binding
 		last_event_state = {},
 	} :: Private
 
-	self.named = function(_, name: string)
+	self.named = function(_, name)
 		self.Name = name
 		return self
 	end
 
-	self.matches = function(
-		_,
-		map: { [Enum.KeyCode]: types.InputEvent }
-	): ({ [Enum.KeyCode]: boolean }, boolean, boolean)
+	self.matches = function(_, key_map)
 		local matches, any_match, all_match = {}, false, true
 
 		for _, next_input in self.Inputs do
-			local matches_res, any_match_res, all_match_res = next_input:matches(map)
+			local matches_res, any_match_res, all_match_res = next_input:matches(key_map)
 
 			if (any_match_res and next_input.Operator == "ANY") or (all_match_res and next_input.Operator == "ALL") then
 				any_match = true
@@ -79,11 +76,11 @@ local function binding(...: Binding | input.Input): Binding
 		return private.read
 	end
 
-	self.subscribe = function(_, cb: SubscriptionCallback)
+	self.subscribe = function(_, cb)
 		private.subscriptions[cb] = cb
 	end
 
-	self.unsubscribe = function(_, cb: SubscriptionCallback)
+	self.unsubscribe = function(_, cb)
 		if private.subscriptions[cb] then
 			private.subscriptions[cb] = nil
 		end
@@ -98,7 +95,7 @@ local function binding(...: Binding | input.Input): Binding
 		return copy
 	end
 
-	return self :: Binding
+	return self
 end
 
 local function as_binding(input_option: input.Input | Binding): Binding

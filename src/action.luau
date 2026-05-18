@@ -33,7 +33,7 @@ export type Action = {
 	press_once: (Action) -> (),
 	subscribe: (Action, SubscriptionCallback) -> (),
 	unsubscribe: (Action, SubscriptionCallback) -> (),
-	update: (queue: { [Enum.KeyCode]: types.InputEvent }, delta: number) -> (),
+	update: ({ [Enum.KeyCode]: types.InputEvent }, number) -> (),
 }
 
 type Private = {
@@ -97,7 +97,7 @@ local function action(name: string)
 		return self
 	end
 
-	self.unbind = function(_, bind: binding.Binding): Action
+	self.unbind = function(_, bind)
 		local index = table.find(private.bindings, bind)
 		if index then
 			table.remove(private.bindings, index)
@@ -105,14 +105,14 @@ local function action(name: string)
 		return self
 	end
 
-	self.context = function(_, ...: context.Context?): Action
+	self.context = function(_, ...: context.Context?)
 		for _, next_context in { ... } do
 			private.contexts[next_context] = true
 		end
 		return self
 	end
 
-	self.cooldown = function(_, cooldown: number): Action
+	self.cooldown = function(_, cooldown)
 		private.cooldown_duration = cooldown
 		private.elapsed = cooldown
 		return self
@@ -126,7 +126,7 @@ local function action(name: string)
 		})
 	end
 
-	self.activated = function(): boolean
+	self.activated = function()
 		return private.activated
 	end
 
@@ -144,22 +144,22 @@ local function action(name: string)
 		return names
 	end
 
-	self.named = function(_, name: string)
+	self.named = function(_, name)
 		self.Name = name
 		return self
 	end
 
-	self.enable = function(): Action
+	self.enable = function()
 		private.enabled = true
 		return self
 	end
 
-	self.disable = function(): Action
+	self.disable = function()
 		private.enabled = false
 		return self
 	end
 
-	self.press = function(): () -> ()
+	self.press = function()
 		private.press_called = true
 		private.erase_press = false
 		return function()
@@ -172,17 +172,17 @@ local function action(name: string)
 		private.erase_press = true
 	end
 
-	self.subscribe = function(_, cb: SubscriptionCallback)
+	self.subscribe = function(_, cb)
 		private.subscriptions[cb] = cb
 	end
 
-	self.unsubscribe = function(_, cb: SubscriptionCallback)
+	self.unsubscribe = function(_, cb)
 		if private.subscriptions[cb] then
 			private.subscriptions[cb] = nil
 		end
 	end
 
-	self.update = function(map: { [Enum.KeyCode]: types.InputEvent }, dt: number)
+	self.update = function(key_map, dt: number)
 		table.clear(private.activated_bindings)
 		private.pressed = {}
 		private.pressing = {}
@@ -220,13 +220,13 @@ local function action(name: string)
 
 		local activated = private.activated
 		for _, bind in private.bindings do
-			local matches, any_match = bind:matches(map)
+			local matches, any_match = bind:matches(key_map)
 			if any_match then
 				table.insert(private.activated_bindings, bind)
 				activated = true
 			end
 			for match in matches do
-				local input_event = map[match]
+				local input_event = key_map[match]
 				if input_event.Event == "BEGAN" then
 					private.pressed[match] = true
 				elseif input_event.Event == "CHANGED" then
