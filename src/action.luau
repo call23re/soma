@@ -184,8 +184,10 @@ local function action(name: string)
 
 	self.update = function(map: { [Enum.KeyCode]: types.InputEvent }, dt: number)
 		table.clear(private.activated_bindings)
-		table.clear(private.pressed)
-		table.clear(private.pressing)
+		private.pressed = {}
+		private.pressing = {}
+		private.released = {}
+
 		private.activated = private.press_called
 
 		if private.erase_press then
