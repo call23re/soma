@@ -1,5 +1,5 @@
 ## Soma
-Soma is a compositional input library designed for Roblox games that use Entity-Component-System patterns. It is currently just a prototype, and it's missing several important features.
+Soma is a compositional input library designed for Roblox games that use Entity-Component-System architecture. It is currently just a prototype, and it's missing several important features.
 
 It supports:
 - Complex input patterns via `actions`, which are composed of `inputs` and `bindings`.
