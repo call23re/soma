@@ -275,19 +275,19 @@ local function normalize(input: InputCode): string
 	return result:upper()
 end
 
-local function as_key_code(kind: InputKind, input: InputCode)
+local function as_key_code(kind: InputKind, input: InputCode): Enum.KeyCode
 	input = normalize(input)
 	if kind == "Key" then
-		return MAP["KEY"][input] or Enum.KeyCode.Unknown
+		return MAP["KEY"][input]
 	elseif kind == "Gamepad" then
-		return MAP["GAMEPAD"][input] or Enum.KeyCode.Unknown
+		return MAP["GAMEPAD"][input]
 	elseif kind == "Mouse" then
-		return MAP["MOUSE"][input] or Enum.KeyCode.Unknown
+		return MAP["MOUSE"][input]
 	elseif kind == "Touch" then
-		return MAP["TOUCH"][input] or Enum.KeyCode.Unknown
+		return MAP["TOUCH"][input]
 	end
 
-	return Enum.KeyCode.Unknown
+	error(`{input} is not a valid InputCode`)
 end
 
 return {
