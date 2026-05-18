@@ -92,14 +92,11 @@ local function input(option: InputKind, ...: EnumMap.InputCode): Input
 			local normalized = EnumMap.as_key_code(self.Kind, input_code)
 			local input_event = map[normalized]
 			if input_event then
-				if input_event.Event == "BEGAN" and self.Activator == "PRESSED" then
-					any_match = true
-					matches[input_event.KeyCode] = true
-				elseif
-					(input_event.Event == "BEGAN" or input_event.Event == "CHANGED")
-					and self.Activator == "PRESSING"
+				if
+					(input_event.Event == "BEGAN" and self.Activator == "PRESSED")
+					or ((input_event.Event == "BEGAN" or input_event.Event == "CHANGED") and self.Activator == "PRESSING")
+					or (input_event.Event == "ENDED" and self.Activator == "RELEASED")
 				then
-				elseif input_event.Event == "ENDED" and self.Activator == "RELEASED" then
 					any_match = true
 					matches[input_event.KeyCode] = true
 				end
