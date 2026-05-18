@@ -1,0 +1,14 @@
+{
+	"name": "soma-example",
+	"emitLegacyScripts": false,
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"$path": "src/client",
+			"soma": {
+				"$path": "../src"
+			}
+		}
+	}
+}
