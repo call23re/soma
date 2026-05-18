@@ -1,18 +1,18 @@
-local EnumMap = require("./enum_map")
+local map = require("./map")
 local types = require("./types")
 
 export type InputKind = "Key" | "Gamepad" | "Mouse" | "Touch"
 export type Activator = "PRESSING" | "PRESSED" | "RELEASED" | "NONE"
-export type SubscriptionCallback = (cur: { EnumMap.InputCode }, prev: { EnumMap.InputCode }?) -> ()
+export type SubscriptionCallback = (cur: { map.InputCode }, prev: { map.InputCode }?) -> ()
 export type Input = {
 	Kind: InputKind,
-	InputCodes: { EnumMap.InputCode },
+	InputCodes: { map.InputCode },
 	Operator: types.Operator,
 	Activator: Activator,
 	Type: "INPUT",
-	set: (Input, ...EnumMap.InputCode) -> Input,
-	add: (Input, ...EnumMap.InputCode) -> Input,
-	remove: (Input, ...EnumMap.InputCode) -> Input,
+	set: (Input, ...map.InputCode) -> Input,
+	add: (Input, ...map.InputCode) -> Input,
+	remove: (Input, ...map.InputCode) -> Input,
 	matches: (Input, { [Enum.KeyCode]: types.InputEvent }) -> ({ [Enum.KeyCode]: boolean }, boolean, boolean),
 	activated: (Input) -> boolean,
 	read: (Input) -> { [Enum.KeyCode]: boolean },
@@ -20,13 +20,13 @@ export type Input = {
 	unsubscribe: (Input, SubscriptionCallback) -> (),
 	clone: (Input) -> Input,
 	_activated: boolean,
-	_input_code_map: { [EnumMap.InputCode]: boolean },
+	_input_code_map: { [map.InputCode]: boolean },
 	_read: { [Enum.KeyCode]: boolean },
 	_subscriptions: { [SubscriptionCallback]: SubscriptionCallback },
-	_last_event_state: { EnumMap.InputCode }?,
+	_last_event_state: { map.InputCode }?,
 }
 
-local function input(option: InputKind, ...: EnumMap.InputCode): Input
+local function input(option: InputKind, ...: map.InputCode): Input
 	local self = {
 		Kind = option,
 		InputCodes = {},
@@ -41,19 +41,19 @@ local function input(option: InputKind, ...: EnumMap.InputCode): Input
 	} :: Input
 
 	for _, input_code in { ... } do
-		input_code = EnumMap.normalize(input_code)
+		input_code = map.normalize(input_code)
 		if not self._input_code_map[input_code] then
 			table.insert(self.InputCodes, input_code)
 			self._input_code_map[input_code] = true
 		end
 	end
 
-	self.set = function(_, ...: EnumMap.InputCode)
+	self.set = function(_, ...: map.InputCode)
 		local prev_input_codes = table.clone(self.InputCodes)
 		self.InputCodes = {}
 		self._input_code_map = {}
 		for _, input_code in { ... } do
-			input_code = EnumMap.normalize(input_code)
+			input_code = map.normalize(input_code)
 			if not self._input_code_map[input_code] then
 				table.insert(self.InputCodes, input_code)
 				self._input_code_map[input_code] = true
@@ -65,13 +65,13 @@ local function input(option: InputKind, ...: EnumMap.InputCode): Input
 		return self
 	end
 
-	self.add = function(_, ...: EnumMap.InputCode)
+	self.add = function(_, ...: map.InputCode)
 		local prev = table.clone(self.InputCodes)
 		local changed = false
 		local new_input_code_map = {}
 		local new_input_code_list = { ... }
 		for _, input_code in { ... } do
-			input_code = EnumMap.normalize(input_code)
+			input_code = map.normalize(input_code)
 			if new_input_code_map[input_code] then
 				continue
 			end
@@ -89,11 +89,11 @@ local function input(option: InputKind, ...: EnumMap.InputCode): Input
 		return self
 	end
 
-	self.remove = function(_, ...: EnumMap.InputCode)
+	self.remove = function(_, ...: map.InputCode)
 		local prev = table.clone(self.InputCodes)
 		local changed = false
 		for _, input_code in { ... } do
-			input_code = EnumMap.normalize(input_code)
+			input_code = map.normalize(input_code)
 			if self._input_code_map[input_code] then
 				self._input_code_map[input_code] = nil
 				table.remove(self.InputCodes, table.find(self.InputCodes, input_code))
@@ -112,7 +112,7 @@ local function input(option: InputKind, ...: EnumMap.InputCode): Input
 		local matches, any_match, all_match = {}, false, true
 
 		for _, input_code in self.InputCodes do
-			local key_code = EnumMap.as_key_code(self.Kind, input_code)
+			local key_code = map.as_key_code(self.Kind, input_code)
 			local input_event = map[key_code]
 			if input_event then
 				if
@@ -166,15 +166,15 @@ local function input(option: InputKind, ...: EnumMap.InputCode): Input
 	return self
 end
 
-local function mouse(...: EnumMap.InputCode)
+local function mouse(...: map.InputCode)
 	return input("Mouse", ...)
 end
 
-local function key(...: EnumMap.InputCode)
+local function key(...: map.InputCode)
 	return input("Key", ...)
 end
 
-local function gamepad(...: EnumMap.InputCode)
+local function gamepad(...: map.InputCode)
 	return input("Gamepad", ...)
 end
 

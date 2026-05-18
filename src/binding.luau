@@ -1,8 +1,8 @@
 local input = require("./input")
 local types = require("./types")
-local EnumMap = require("./enum_map")
+local map = require("./map")
 
-export type SubscriptionCallback = (cur: { EnumMap.InputCode }, prev: { EnumMap.InputCode }?) -> ()
+export type SubscriptionCallback = (cur: { map.InputCode }, prev: { map.InputCode }?) -> ()
 
 export type Binding = {
 	Inputs: { input.Input },
@@ -19,7 +19,7 @@ export type Binding = {
 	_activated: boolean,
 	_read: { [Enum.KeyCode]: boolean },
 	_subscriptions: { [SubscriptionCallback]: SubscriptionCallback },
-	_last_event_state: { EnumMap.InputCode }?,
+	_last_event_state: { map.InputCode }?,
 }
 
 local function binding(...: Binding | input.Input): Binding
