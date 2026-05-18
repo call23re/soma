@@ -40,6 +40,10 @@ local function get_keycode(InputObject: InputObject): Enum.KeyCode?
 end
 
 UserInputService.InputBegan:Connect(function(InputObject, sunk)
+	if sunk then
+		return
+	end
+
 	local key_code = get_keycode(InputObject)
 	if key_code then
 		input_map[key_code] = {
