@@ -293,4 +293,5 @@ end
 return {
 	MAP = MAP,
 	as_key_code = as_key_code,
+	normalize = normalize,
 }

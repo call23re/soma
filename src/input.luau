@@ -20,6 +20,7 @@ export type Input = {
 	unsubscribe: (Input, SubscriptionCallback) -> (),
 	clone: (Input) -> Input,
 	_activated: boolean,
+	_input_code_map: { [EnumMap.InputCode]: boolean },
 	_read: { [Enum.KeyCode]: boolean },
 	_subscriptions: { [SubscriptionCallback]: SubscriptionCallback },
 	_last_event_state: { EnumMap.InputCode }?,
@@ -28,22 +29,38 @@ export type Input = {
 local function input(option: InputKind, ...: EnumMap.InputCode): Input
 	local self = {
 		Kind = option,
-		InputCodes = { ... },
+		InputCodes = {},
 		Operator = "ANY",
 		Activator = "PRESSED",
 		Type = "INPUT",
 		_activated = false,
+		_input_code_map = {},
 		_read = {},
 		_subscriptions = {},
 		_last_event_state = {},
 	} :: Input
 
-	-- TODO: prevent duplicates
+	for _, input_code in { ... } do
+		input_code = EnumMap.normalize(input_code)
+		if not self._input_code_map[input_code] then
+			table.insert(self.InputCodes, input_code)
+			self._input_code_map[input_code] = true
+		end
+	end
+
 	self.set = function(_, ...: EnumMap.InputCode)
-		local prev = self.InputCodes
-		self.InputCodes = { ... }
+		local prev_input_codes = table.clone(self.InputCodes)
+		self.InputCodes = {}
+		self._input_code_map = {}
+		for _, input_code in { ... } do
+			input_code = EnumMap.normalize(input_code)
+			if not self._input_code_map[input_code] then
+				table.insert(self.InputCodes, input_code)
+				self._input_code_map[input_code] = true
+			end
+		end
 		for _, cb in self._subscriptions do
-			cb(self.InputCodes, prev)
+			cb(self.InputCodes, prev_input_codes)
 		end
 		return self
 	end
@@ -51,14 +68,20 @@ local function input(option: InputKind, ...: EnumMap.InputCode): Input
 	self.add = function(_, ...: EnumMap.InputCode)
 		local prev = table.clone(self.InputCodes)
 		local changed = false
+		local new_input_code_map = {}
+		local new_input_code_list = { ... }
 		for _, input_code in { ... } do
-			if table.find(self.InputCodes, input_code) then
+			input_code = EnumMap.normalize(input_code)
+			if new_input_code_map[input_code] then
 				continue
 			end
-			table.insert(self.InputCodes, input_code)
+			new_input_code_map[input_code] = true
+			table.insert(new_input_code_list, input_code)
 			changed = true
 		end
 		if changed then
+			self.InputCodes = new_input_code_list
+			self._input_code_map = new_input_code_map
 			for _, cb in self._subscriptions do
 				cb(self.InputCodes, prev)
 			end
@@ -66,14 +89,14 @@ local function input(option: InputKind, ...: EnumMap.InputCode): Input
 		return self
 	end
 
-	-- TODO: must work for both kinds of InputCode (string and enum)
 	self.remove = function(_, ...: EnumMap.InputCode)
 		local prev = table.clone(self.InputCodes)
 		local changed = false
 		for _, input_code in { ... } do
-			local index = table.find(self.InputCodes, input_code)
-			if index then
-				table.remove(self.InputCodes, index)
+			input_code = EnumMap.normalize(input_code)
+			if self._input_code_map[input_code] then
+				self._input_code_map[input_code] = nil
+				table.remove(self.InputCodes, table.find(self.InputCodes, input_code))
 				changed = true
 			end
 		end
@@ -89,8 +112,8 @@ local function input(option: InputKind, ...: EnumMap.InputCode): Input
 		local matches, any_match, all_match = {}, false, true
 
 		for _, input_code in self.InputCodes do
-			local normalized = EnumMap.as_key_code(self.Kind, input_code)
-			local input_event = map[normalized]
+			local key_code = EnumMap.as_key_code(self.Kind, input_code)
+			local input_event = map[key_code]
 			if input_event then
 				if
 					(input_event.Event == "BEGAN" and self.Activator == "PRESSED")
