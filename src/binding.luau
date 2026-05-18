@@ -16,22 +16,29 @@ export type Binding = {
 	subscribe: (Binding, SubscriptionCallback) -> (),
 	unsubscribe: (Binding, SubscriptionCallback) -> (),
 	clone: (Binding) -> Binding,
-	_activated: boolean,
-	_read: { [Enum.KeyCode]: boolean },
-	_subscriptions: { [SubscriptionCallback]: SubscriptionCallback },
-	_last_event_state: { map.InputCode }?,
+}
+
+type Private = {
+	activated: boolean,
+	read: { [Enum.KeyCode]: boolean },
+	subscriptions: { [SubscriptionCallback]: SubscriptionCallback },
+	last_event_state: { map.InputCode }?,
 }
 
 local function binding(...: Binding | input.Input): Binding
 	local self = {
+		Name = nil,
 		Inputs = { ... },
 		Type = "BINDING",
 		Operator = "ANY",
-		_activated = false,
-		_read = {},
-		_subscriptions = {},
-		_last_event_state = {},
 	} :: Binding
+
+	local private = {
+		activated = false,
+		read = {},
+		subscriptions = {},
+		last_event_state = {},
+	} :: Private
 
 	self.named = function(_, name: string)
 		self.Name = name
@@ -54,26 +61,26 @@ local function binding(...: Binding | input.Input): Binding
 				matches[match] = true
 			end
 		end
-		self._activated = if self.Operator == "ANY" then any_match else all_match
-		self._read = matches
+		private.activated = if self.Operator == "ANY" then any_match else all_match
+		private.read = matches
 		return matches, any_match, if not any_match then false else all_match
 	end
 
 	self.activated = function()
-		return self._activated
+		return private.activated
 	end
 
 	self.read = function()
-		return self._read
+		return private.read
 	end
 
 	self.subscribe = function(_, cb: SubscriptionCallback)
-		self._subscriptions[cb] = cb
+		private.subscriptions[cb] = cb
 	end
 
 	self.unsubscribe = function(_, cb: SubscriptionCallback)
-		if self._subscriptions[cb] then
-			self._subscriptions[cb] = nil
+		if private.subscriptions[cb] then
+			private.subscriptions[cb] = nil
 		end
 	end
 

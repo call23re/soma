@@ -3,7 +3,9 @@ local types = require("./types")
 
 export type InputKind = "Key" | "Gamepad" | "Mouse" | "Touch"
 export type Activator = "PRESSING" | "PRESSED" | "RELEASED" | "NONE"
+
 export type SubscriptionCallback = (cur: { map.InputCode }, prev: { map.InputCode }?) -> ()
+
 export type Input = {
 	Kind: InputKind,
 	InputCodes: { map.InputCode },
@@ -19,11 +21,14 @@ export type Input = {
 	subscribe: (Input, SubscriptionCallback) -> (),
 	unsubscribe: (Input, SubscriptionCallback) -> (),
 	clone: (Input) -> Input,
-	_activated: boolean,
-	_input_code_map: { [map.InputCode]: boolean },
-	_read: { [Enum.KeyCode]: boolean },
-	_subscriptions: { [SubscriptionCallback]: SubscriptionCallback },
-	_last_event_state: { map.InputCode }?,
+}
+
+type Private = {
+	activated: boolean,
+	input_code_map: { [map.InputCode]: boolean },
+	read: { [Enum.KeyCode]: boolean },
+	subscriptions: { [SubscriptionCallback]: SubscriptionCallback },
+	last_event_state: { map.InputCode }?,
 }
 
 local function input(option: InputKind, ...: map.InputCode): Input
@@ -33,33 +38,36 @@ local function input(option: InputKind, ...: map.InputCode): Input
 		Operator = "ANY",
 		Activator = "PRESSED",
 		Type = "INPUT",
-		_activated = false,
-		_input_code_map = {},
-		_read = {},
-		_subscriptions = {},
-		_last_event_state = {},
 	} :: Input
+
+	local private = {
+		activated = false,
+		input_code_map = {},
+		read = {},
+		subscriptions = {},
+		last_event_state = {},
+	} :: Private
 
 	for _, input_code in { ... } do
 		input_code = map.normalize(input_code)
-		if not self._input_code_map[input_code] then
+		if not private.input_code_map[input_code] then
 			table.insert(self.InputCodes, input_code)
-			self._input_code_map[input_code] = true
+			private.input_code_map[input_code] = true
 		end
 	end
 
 	self.set = function(_, ...: map.InputCode)
 		local prev_input_codes = table.clone(self.InputCodes)
 		self.InputCodes = {}
-		self._input_code_map = {}
+		private.input_code_map = {}
 		for _, input_code in { ... } do
 			input_code = map.normalize(input_code)
-			if not self._input_code_map[input_code] then
+			if not private.input_code_map[input_code] then
 				table.insert(self.InputCodes, input_code)
-				self._input_code_map[input_code] = true
+				private.input_code_map[input_code] = true
 			end
 		end
-		for _, cb in self._subscriptions do
+		for _, cb in private.subscriptions do
 			cb(self.InputCodes, prev_input_codes)
 		end
 		return self
@@ -81,8 +89,8 @@ local function input(option: InputKind, ...: map.InputCode): Input
 		end
 		if changed then
 			self.InputCodes = new_input_code_list
-			self._input_code_map = new_input_code_map
-			for _, cb in self._subscriptions do
+			private.input_code_map = new_input_code_map
+			for _, cb in private.subscriptions do
 				cb(self.InputCodes, prev)
 			end
 		end
@@ -94,14 +102,14 @@ local function input(option: InputKind, ...: map.InputCode): Input
 		local changed = false
 		for _, input_code in { ... } do
 			input_code = map.normalize(input_code)
-			if self._input_code_map[input_code] then
-				self._input_code_map[input_code] = nil
+			if private.input_code_map[input_code] then
+				private.input_code_map[input_code] = nil
 				table.remove(self.InputCodes, table.find(self.InputCodes, input_code))
 				changed = true
 			end
 		end
 		if changed then
-			for _, cb in self._subscriptions do
+			for _, cb in private.subscriptions do
 				cb(self.InputCodes, prev)
 			end
 		end
@@ -133,26 +141,26 @@ local function input(option: InputKind, ...: map.InputCode): Input
 			all_match = true
 		end
 
-		self._activated = if self.Operator == "ANY" then any_match else all_match
-		self._read = matches
+		private.activated = if self.Operator == "ANY" then any_match else all_match
+		private.read = matches
 		return matches, any_match, if not any_match then false else all_match
 	end
 
 	self.activated = function()
-		return self._activated
+		return private.activated
 	end
 
 	self.read = function()
-		return self._read
+		return private.read
 	end
 
 	self.subscribe = function(_, cb: SubscriptionCallback)
-		self._subscriptions[cb] = cb
+		private.subscriptions[cb] = cb
 	end
 
 	self.unsubscribe = function(_, cb: SubscriptionCallback)
-		if self._subscriptions[cb] then
-			self._subscriptions[cb] = nil
+		if private.subscriptions[cb] then
+			private.subscriptions[cb] = nil
 		end
 	end
 
