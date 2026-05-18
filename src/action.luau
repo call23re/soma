@@ -7,7 +7,6 @@ export type ActionState = {
 	read Pressed: { [Enum.KeyCode]: boolean },
 	read Pressing: { [Enum.KeyCode]: boolean },
 	read Released: { [Enum.KeyCode]: boolean },
-	read LookDelta: Vector2,
 }
 
 export type ActionEvent = {
@@ -44,7 +43,6 @@ export type Action = {
 	_pressed: { [Enum.KeyCode]: boolean },
 	_pressing: { [Enum.KeyCode]: boolean },
 	_released: { [Enum.KeyCode]: boolean },
-	_look_delta: Vector2,
 	_press_called: boolean,
 	_erase_press: boolean,
 	_last_action_event: ActionEvent?,
@@ -64,7 +62,6 @@ local function action(name: string)
 		_pressed = {},
 		_pressing = {},
 		_released = {},
-		_look_delta = Vector2.zero,
 		_press_called = false,
 		_erase_press = true,
 		_last_action_event = nil,
@@ -120,7 +117,6 @@ local function action(name: string)
 			Pressed = self._pressed,
 			Pressing = self._pressing,
 			Released = self._released,
-			LookDelta = self._look_delta,
 		})
 	end
 
