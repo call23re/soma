@@ -108,12 +108,12 @@ local function input(option: InputKind, ...: map.InputCode): Input
 		return self
 	end
 
-	self.matches = function(_, map: { [Enum.KeyCode]: types.InputEvent })
+	self.matches = function(_, match_map: { [Enum.KeyCode]: types.InputEvent })
 		local matches, any_match, all_match = {}, false, true
 
 		for _, input_code in self.InputCodes do
 			local key_code = map.as_key_code(self.Kind, input_code)
-			local input_event = map[key_code]
+			local input_event = match_map[key_code]
 			if input_event then
 				if
 					(input_event.Event == "BEGAN" and self.Activator == "PRESSED")
