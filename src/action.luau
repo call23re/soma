@@ -6,6 +6,7 @@ local types = require("./types")
 export type ActionState = {
 	read Pressed: { [Enum.KeyCode]: boolean },
 	read Pressing: { [Enum.KeyCode]: boolean },
+	read Released: { [Enum.KeyCode]: boolean },
 	read LookDelta: Vector2,
 }
 
@@ -42,6 +43,7 @@ export type Action = {
 	_activated: boolean,
 	_pressed: { [Enum.KeyCode]: boolean },
 	_pressing: { [Enum.KeyCode]: boolean },
+	_released: { [Enum.KeyCode]: boolean },
 	_look_delta: Vector2,
 	_press_called: boolean,
 	_erase_press: boolean,
@@ -61,6 +63,7 @@ local function action(name: string)
 		_activated = false,
 		_pressed = {},
 		_pressing = {},
+		_released = {},
 		_look_delta = Vector2.zero,
 		_press_called = false,
 		_erase_press = true,
@@ -116,6 +119,7 @@ local function action(name: string)
 		return table.freeze({
 			Pressed = self._pressed,
 			Pressing = self._pressing,
+			Released = self._released,
 			LookDelta = self._look_delta,
 		})
 	end
@@ -219,10 +223,12 @@ local function action(name: string)
 			end
 			for match in matches do
 				local input_event = map[match]
-				if input_event.Event == "BEGAN" or input_event.Event == "CHANGED" then
+				if input_event.Event == "BEGAN" then
+					self._pressed[match] = true
+				elseif input_event.Event == "CHANGED" then
 					self._pressing[match] = true
 				elseif input_event.Event == "ENDED" then
-					self._pressed[match] = true
+					self._released[match] = true
 				end
 				-- TODO: handle delta
 			end
