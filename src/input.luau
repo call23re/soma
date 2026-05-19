@@ -81,8 +81,8 @@ local function input(option: InputKind, ...: map.InputCode): Input
 		local prev = table.clone(self.InputCodes)
 		local changed = false
 
-		local new_input_code_map = {}
-		local new_input_code_list = { ... }
+		local new_input_code_map = table.clone(private.input_code_map)
+		local new_input_code_list = table.clone(self.InputCodes)
 
 		for _, input_code in { ... } do
 			input_code = map.normalize(input_code)
