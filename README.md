@@ -11,4 +11,4 @@ It supports:
 - Manually calling actions via `press` or `press_once`.
 - Change tracking for bindings, inputs, and actions.
 
-See the [example](/example) for more details.
+See the [example](/example) project for more details.
