@@ -1,4 +1,4 @@
-export type InputEventKind = "BEGAN" | "CHANGED" | "ENDED"
+export type InputEventKind = "BEGAN" | "CHANGED" | "ENDED" | "HELD"
 export type InputEvent = {
 	KeyCode: Enum.KeyCode,
 	InputObject: InputObject,

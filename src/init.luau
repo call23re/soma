@@ -90,7 +90,7 @@ local function update(dt)
 		if value.Event == "ENDED" then
 			input_map[key] = nil
 		elseif value.Event == "BEGAN" then
-			value.Event = "CHANGED"
+			value.Event = "HELD"
 		end
 	end
 end

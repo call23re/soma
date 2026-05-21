@@ -6,12 +6,14 @@ local types = require("./types")
 export type ActionState = {
 	read Pressed: { [Enum.KeyCode]: boolean },
 	read Pressing: { [Enum.KeyCode]: boolean },
+	read Changed: { [Enum.KeyCode]: boolean },
 	read Released: { [Enum.KeyCode]: boolean },
 }
 
 export type ActionEvent = {
-	Active: boolean,
+	Activated: boolean,
 	ActionState: ActionState,
+	CooldownActive: boolean,
 }
 
 export type SubscriptionCallback = (cur: ActionEvent, prev: ActionEvent?) -> ()
@@ -45,6 +47,7 @@ type Private = {
 	activated: boolean,
 	pressed: { [Enum.KeyCode]: boolean },
 	pressing: { [Enum.KeyCode]: boolean },
+	changed: { [Enum.KeyCode]: boolean },
 	released: { [Enum.KeyCode]: boolean },
 	press_called: boolean,
 	erase_press: boolean,
@@ -67,6 +70,7 @@ local function action(name: string)
 		activated = false,
 		pressed = {},
 		pressing = {},
+		changed = {},
 		released = {},
 		press_called = false,
 		erase_press = true,
@@ -80,7 +84,7 @@ local function action(name: string)
 			if typeof(binding_option) ~= "table" then
 				continue
 			end
-			-- TODO: this cast is misleading
+			-- NOTE: this cast is misleading
 			binding_option = binding_option :: input.Input | binding.Binding
 
 			if binding_option.Type == nil then
@@ -122,6 +126,7 @@ local function action(name: string)
 		return table.freeze({
 			Pressed = private.pressed,
 			Pressing = private.pressing,
+			Changed = private.changed,
 			Released = private.released,
 		})
 	end
@@ -210,15 +215,25 @@ local function action(name: string)
 
 		private.elapsed += dt or 0
 		if private.elapsed < private.cooldown_duration then
-			if private.last_action_event and private.last_action_event.Active ~= private.activated then
+			if private.last_action_event and private.last_action_event.Activated ~= private.activated then
+				local action_event = { Activated = false, ActionState = self:read(), CooldownActive = true }
 				for _, subscription in private.subscriptions do
-					subscription({ Active = false, ActionState = self:read() }, private.last_action_event)
+					subscription(action_event, private.last_action_event)
 				end
+				private.last_action_event = action_event
 			end
 			return
 		end
 
 		local activated = private.activated
+		if private.last_action_event and private.last_action_event.CooldownActive then
+			local action_event = { Activated = activated, ActionState = self:read(), CooldownActive = false }
+			for _, subscription in private.subscriptions do
+				subscription(action_event, private.last_action_event)
+			end
+			private.last_action_event = action_event
+		end
+
 		for _, bind in private.bindings do
 			local matches, any_match = bind:matches(key_map)
 			if any_match then
@@ -229,8 +244,10 @@ local function action(name: string)
 				local input_event = key_map[match]
 				if input_event.Event == "BEGAN" then
 					private.pressed[match] = true
-				elseif input_event.Event == "CHANGED" then
+				elseif input_event.Event == "HELD" then
 					private.pressing[match] = true
+				elseif input_event.Event == "CHANGED" then
+					private.changed[match] = true
 				elseif input_event.Event == "ENDED" then
 					private.released[match] = true
 				end
@@ -243,7 +260,8 @@ local function action(name: string)
 		end
 
 		if private.activated ~= activated then
-			local action_event = { Active = false, ActionState = self:read() }
+			local action_event =
+				{ Activated = activated, ActionState = self:read(), CooldownActive = private.cooldown_duration > 0 }
 			for _, subscription in private.subscriptions do
 				subscription(action_event, private.last_action_event)
 			end
