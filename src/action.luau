@@ -22,7 +22,8 @@ export type Action = {
 	Name: string?,
 	bind: (Action, ...(input.Input | binding.Binding | { input.Input | binding.Binding })) -> Action,
 	unbind: (Action, binding.Binding) -> Action,
-	context: (Action, ...context.Context?) -> Action,
+	context: (Action, ...context.Context) -> Action,
+	without_context: (Action, ...context.Context) -> Action,
 	cooldown: (Action, number) -> Action,
 	read: (Action) -> ActionState,
 	activated: (Action) -> boolean,
@@ -42,6 +43,7 @@ type Private = {
 	bindings: { binding.Binding },
 	activated_bindings: { binding.Binding },
 	contexts: { [context.Context]: boolean },
+	without_contexts: { [context.Context]: boolean },
 	cooldown_duration: number,
 	elapsed: number,
 	activated: boolean,
@@ -65,6 +67,7 @@ local function action(name: string)
 		bindings = {},
 		activated_bindings = {},
 		contexts = {},
+		without_contexts = {},
 		cooldown_duration = 0,
 		elapsed = 0,
 		activated = false,
@@ -109,9 +112,16 @@ local function action(name: string)
 		return self
 	end
 
-	self.context = function(_, ...: context.Context?)
+	self.context = function(_, ...: context.Context)
 		for _, next_context in { ... } do
 			private.contexts[next_context] = true
+		end
+		return self
+	end
+
+	self.without_context = function(_, ...: context.Context)
+		for _, next_context in { ... } do
+			private.without_contexts[next_context] = true
 		end
 		return self
 	end
@@ -207,6 +217,11 @@ local function action(name: string)
 		for next_context in private.contexts do
 			if next_context.Enabled then
 				any_contexts_enabled = true
+			end
+		end
+		for next_context in private.without_contexts do
+			if next_context.Enabled then
+				any_contexts_enabled = false
 			end
 		end
 		if not any_contexts_enabled then
