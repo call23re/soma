@@ -6,6 +6,7 @@ local binding = require("@self/binding")
 local input = require("@self/input")
 local activators = require("@self/activators")
 local operators = require("@self/operators")
+local map = require("@self/map")
 local types = require("@self/types")
 
 local actions = {}
@@ -103,4 +104,5 @@ return {
 	input = input,
 	activators = activators,
 	operators = operators,
+	map = map,
 }
