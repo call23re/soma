@@ -9,6 +9,19 @@ local operators = require("@self/operators")
 local map = require("@self/map")
 local types = require("@self/types")
 
+export type Context = context.Context
+export type Action = action.Action
+export type ActionState = action.ActionState
+export type ActionEvent = action.ActionEvent
+export type Binding = binding.Binding
+export type BindingSubscriptionCallback = binding.SubscriptionCallback
+export type Input = input.Input
+export type InputKind = input.InputKind
+export type InputEvent = types.InputEvent
+export type InputEventKind = types.InputEventKind
+export type InputSubscriptionCallback = input.SubscriptionCallback
+export type Activator = input.Activator
+
 local actions = {}
 local input_map: { [Enum.KeyCode]: types.InputEvent } = {}
 
