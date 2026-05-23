@@ -1,6 +1,6 @@
 [package]
 name = "call23re/soma"
-description = ""
+description = "A compositional input library."
 version = "0.1.0"
 license = "MIT"
 registry = "https://github.com/UpliftGames/wally-index"
