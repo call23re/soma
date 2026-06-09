@@ -16,6 +16,8 @@ export type Input = {
 	add: (Input, ...map.InputCode) -> Input,
 	remove: (Input, ...map.InputCode) -> Input,
 	matches: (Input, { [Enum.KeyCode]: types.InputEvent }) -> ({ [Enum.KeyCode]: boolean }, boolean, boolean),
+	press: (Input) -> () -> (),
+	press_once: (Input) -> (),
 	activated: (Input) -> boolean,
 	read: (Input) -> { [Enum.KeyCode]: boolean },
 	subscribe: (Input, SubscriptionCallback) -> (),
@@ -25,6 +27,8 @@ export type Input = {
 
 type Private = {
 	activated: boolean,
+	press_called: boolean,
+	erase_press: boolean,
 	input_code_map: { [map.InputCode]: boolean },
 	read: { [Enum.KeyCode]: boolean },
 	subscriptions: { [SubscriptionCallback]: SubscriptionCallback },
@@ -42,6 +46,8 @@ local function input(option: InputKind, ...: map.InputCode): Input
 
 	local private = {
 		activated = false,
+		press_called = false,
+		erase_press = true,
 		input_code_map = {},
 		read = {},
 		subscriptions = {},
@@ -147,15 +153,32 @@ local function input(option: InputKind, ...: map.InputCode): Input
 			end
 		end
 
-		if self.Activator == "NONE" and not any_match then
+		if (self.Activator == "NONE" and not any_match) or private.press_called then
 			any_match = true
 			all_match = true
+		end
+
+		if private.erase_press then
+			private.press_called = false
 		end
 
 		private.activated = if self.Operator == "ANY" then any_match else all_match
 		private.read = matches
 
 		return matches, any_match, if not any_match then false else all_match
+	end
+
+	self.press = function()
+		private.press_called = true
+		private.erase_press = false
+		return function()
+			private.erase_press = true
+		end
+	end
+
+	self.press_once = function()
+		private.press_called = true
+		private.erase_press = true
 	end
 
 	self.activated = function()

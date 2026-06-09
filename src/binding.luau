@@ -11,6 +11,8 @@ export type Binding = {
 	Operator: types.Operator,
 	named: (Binding, string) -> Binding,
 	matches: (Binding, { [Enum.KeyCode]: types.InputEvent }) -> ({ [Enum.KeyCode]: boolean }, boolean, boolean),
+	press: (Binding) -> () -> (),
+	press_once: (Binding) -> (),
 	activated: (Binding) -> boolean,
 	read: (Binding) -> { [Enum.KeyCode]: boolean },
 	subscribe: (Binding, SubscriptionCallback) -> (),
@@ -20,6 +22,8 @@ export type Binding = {
 
 type Private = {
 	activated: boolean,
+	press_called: boolean,
+	erase_press: boolean,
 	read: { [Enum.KeyCode]: boolean },
 	subscriptions: { [SubscriptionCallback]: SubscriptionCallback },
 	last_event_state: { map.InputCode }?,
@@ -35,6 +39,8 @@ local function binding(...: Binding | input.Input): Binding
 
 	local private = {
 		activated = false,
+		press_called = false,
+		erase_press = true,
 		read = {},
 		subscriptions = {},
 		last_event_state = {},
@@ -62,10 +68,32 @@ local function binding(...: Binding | input.Input): Binding
 			end
 		end
 
+		if private.press_called then
+			any_match = true
+			all_match = true
+		end
+
+		if private.erase_press then
+			private.press_called = false
+		end
+
 		private.activated = if self.Operator == "ANY" then any_match else all_match
 		private.read = matches
 
 		return matches, any_match, if not any_match then false else all_match
+	end
+
+	self.press = function()
+		private.press_called = true
+		private.erase_press = false
+		return function()
+			private.erase_press = true
+		end
+	end
+
+	self.press_once = function()
+		private.press_called = true
+		private.erase_press = true
 	end
 
 	self.activated = function()
